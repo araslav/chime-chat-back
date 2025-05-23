@@ -20,7 +20,7 @@ jobs:
 
       - name: Sync project to EC2
         run: |
-          rsync -avz --exclude='.git' --exclude='target/' --exclude='.github' -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/chime-chat-back
+          rsync -avz --exclude='.git' --exclude='target/' --exclude='.github' -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.EC2_SSH_USER_BACKEND }}@${{ secrets.EC2_HOST_BACKEND }}:/home/${{ secrets.EC2_SSH_USER_BACKEND }}/chime-chat-back
 
       - name: Deploy on EC2
         run: |
