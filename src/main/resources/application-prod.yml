@@ -23,7 +23,7 @@ spring:
       ddl-auto: none
     database-platform: org.hibernate.dialect.H2Dialect
 
-  crossOriginUrl: http://52.204.225.203
+  crossOriginUrl: https://mychatapp.fun/
 
 #server:
 #  port: 8082
