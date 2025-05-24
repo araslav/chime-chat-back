@@ -1,6 +1,6 @@
 package com.petpace.chat.aws.chime.controller;
 
-import com.petpace.chat.aws.chime.dto.DoctorMeetingInfo;
+import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
 import com.petpace.chat.aws.chime.dto.UserRequestDto;
 import com.petpace.chat.aws.chime.service.AwsChimeService;
@@ -19,7 +19,7 @@ public class ChimeController {
     }
 
     @PostMapping("/create-meeting")
-    public DoctorMeetingInfo createMeeting(@RequestBody UserRequestDto doctorRequestDto) {
+    public MeetingInfoDto createMeeting(@RequestBody UserRequestDto doctorRequestDto) {
         return awsChimeService.createMeeting(doctorRequestDto);
     }
 

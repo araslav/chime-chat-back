@@ -1,6 +1,6 @@
 package com.petpace.chat.aws.chime.service;
 
-import com.petpace.chat.aws.chime.dto.DoctorMeetingInfo;
+import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -9,13 +9,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class MeetingPoolService {
-    private final Map<Long, DoctorMeetingInfo> meetingMap = new ConcurrentHashMap<>();
+    private final Map<Long, MeetingInfoDto> meetingMap = new ConcurrentHashMap<>();
 
-    public void addMeeting(Long doctorId, DoctorMeetingInfo info) {
+    public void addMeeting(Long doctorId, MeetingInfoDto info) {
         meetingMap.put(doctorId, info);
     }
 
-    public Optional<DoctorMeetingInfo> findFreeDoctor() {
+    public Optional<MeetingInfoDto> findFreeMeeting() {
         return meetingMap.values().stream()
                 .filter(info -> !info.isBusy())
                 .findFirst();
@@ -31,7 +31,7 @@ public class MeetingPoolService {
         meetingMap.remove(doctorId);
     }
 
-    public Map<Long, DoctorMeetingInfo> getAllMeetings() {
+    public Map<Long, MeetingInfoDto> getAllMeetings() {
         return meetingMap;
     }
 }

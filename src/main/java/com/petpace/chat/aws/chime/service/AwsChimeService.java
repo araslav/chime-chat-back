@@ -1,8 +1,9 @@
 package com.petpace.chat.aws.chime.service;
 
-import com.petpace.chat.aws.chime.dto.DoctorMeetingInfo;
+import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
 import com.petpace.chat.aws.chime.dto.UserRequestDto;
+import com.petpace.chat.aws.chime.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.chimesdkmeetings.ChimeSdkMeetingsClient;
@@ -15,7 +16,7 @@ public class AwsChimeService {
     private final MeetingPoolService meetingPoolService;
     private final EmitterService emitterService;
 
-    public DoctorMeetingInfo createMeeting(UserRequestDto doctorRequestDto) {
+    public MeetingInfoDto createMeeting(UserRequestDto doctorRequestDto) {
         String joinToken = String.valueOf(doctorRequestDto.hashCode());
 
         // TODO create bean
@@ -27,7 +28,7 @@ public class AwsChimeService {
 
         CreateMeetingResponse meetingResponse = chimeClient.createMeeting(meetingRequest);
 
-        DoctorMeetingInfo doctorMeetingInfo = mapToDoctorMeetingInfo(doctorRequestDto, meetingResponse.meeting());
+        MeetingInfoDto doctorMeetingInfo = mapToMeetingInfo(doctorRequestDto, meetingResponse.meeting());
         doctorMeetingInfo.setJoinToken(joinToken);
 
         meetingPoolService.addMeeting(doctorRequestDto.id(), doctorMeetingInfo);
@@ -36,44 +37,64 @@ public class AwsChimeService {
 
     public JoinMeetingResponse joinMeeting(UserRequestDto userRequestDto) {
 
-        DoctorMeetingInfo doctorMeetingInfo = meetingPoolService.findFreeDoctor().get();
+        // create patient JoinMeetingResponse
+        // create doctor  JoinMeetingResponse
 
+
+        // End
+
+        MeetingInfoDto meetingInfo = meetingPoolService.findFreeMeeting().get();
+
+        User patient = new User(userRequestDto.id(), userRequestDto.name(),
+                userRequestDto.name(), userRequestDto.role());
+
+        JoinMeetingResponse doctorMeetingResponse = getMeetingResponse(meetingInfo, meetingInfo.getDoctorInfo());
+        JoinMeetingResponse patientMeetingResponse = getMeetingResponse(meetingInfo, patient);
+
+        emitterService.notifyClient(doctorMeetingResponse);
+        return patientMeetingResponse;
+    }
+
+    private JoinMeetingResponse getMeetingResponse(MeetingInfoDto meetingInfoDto, User user) {
+        Attendee attendee = createAttendee(meetingInfoDto.getMeetingId(), user);
+        return mapToJoinMeetingResponse(meetingInfoDto, attendee);
+    }
+
+
+    private Attendee createAttendee(String meetingId, User user) {
         CreateAttendeeRequest attendeeRequest = CreateAttendeeRequest.builder()
-                .meetingId(String.valueOf(doctorMeetingInfo.getMeetingId()))
-                .externalUserId(userRequestDto.name() + "-" + userRequestDto.id())
+                .meetingId(meetingId)
+                .externalUserId(user.getFirstName() + "_" + user.getLastName() + "-" + user.getId())
                 .build();
 
         CreateAttendeeResponse attendeeResponse = chimeClient.createAttendee(attendeeRequest);
-        Attendee attendee = attendeeResponse.attendee();
-
-        JoinMeetingResponse joinMeetingResponse = mapToJoinMeetingResponse(attendee, doctorMeetingInfo);
-
-        emitterService.notifyClient(doctorMeetingInfo);
-        return joinMeetingResponse;
+        return attendeeResponse.attendee();
     }
 
-    private DoctorMeetingInfo mapToDoctorMeetingInfo(UserRequestDto userRequestDto, Meeting meeting) {
-        DoctorMeetingInfo doctorMeetingInfo = new DoctorMeetingInfo();
-        doctorMeetingInfo.setMeetingId(meeting.meetingId());
-        doctorMeetingInfo.setDoctorId(userRequestDto.id());
-        doctorMeetingInfo.setAudioHostUrl(meeting.mediaPlacement().audioHostUrl());
-        doctorMeetingInfo.setMediaRegion(meeting.mediaRegion());
-        doctorMeetingInfo.setExternalUserId(String.valueOf(userRequestDto.id()));
-        doctorMeetingInfo.setSignalingUrl(meeting.mediaPlacement().signalingUrl());
-        doctorMeetingInfo.setTurnControlUrl(meeting.mediaPlacement().turnControlUrl());
-        return doctorMeetingInfo;
+    private MeetingInfoDto mapToMeetingInfo(UserRequestDto userRequestDto, Meeting meeting) {
+        MeetingInfoDto meetingInfo = new MeetingInfoDto();
+        meetingInfo.setMeetingId(meeting.meetingId());
+//        meetingInfo.setDoctorId(userRequestDto.id());
+//        meetingInfo.setExternalUserId(String.valueOf(userRequestDto.id())); // User Id (doctor ID)
+        meetingInfo.setAudioHostUrl(meeting.mediaPlacement().audioHostUrl());
+        meetingInfo.setMediaRegion(meeting.mediaRegion());
+        meetingInfo.setSignalingUrl(meeting.mediaPlacement().signalingUrl());
+        meetingInfo.setTurnControlUrl(meeting.mediaPlacement().turnControlUrl());
+        meetingInfo.setDoctorInfo(new User(userRequestDto.id(), userRequestDto.name(),
+                userRequestDto.name(), userRequestDto.role()));
+        return meetingInfo;
     }
 
-    private JoinMeetingResponse mapToJoinMeetingResponse(Attendee attendee, DoctorMeetingInfo doctorMeetingInfo) {
+    private JoinMeetingResponse mapToJoinMeetingResponse(MeetingInfoDto meetingInfoDto,Attendee attendee) {
         JoinMeetingResponse joinMeetingResponse = new JoinMeetingResponse();
-        joinMeetingResponse.setMeetingId(doctorMeetingInfo.getMeetingId());
+        joinMeetingResponse.setMeetingId(meetingInfoDto.getMeetingId());
         joinMeetingResponse.setExternalUserId(attendee.externalUserId());
         joinMeetingResponse.setJoinToken(attendee.joinToken());
         joinMeetingResponse.setAttendeeId(attendee.attendeeId());
-        joinMeetingResponse.setMediaRegion(doctorMeetingInfo.getMediaRegion());
-        joinMeetingResponse.setAudioHostUrl(doctorMeetingInfo.getAudioHostUrl());
-        joinMeetingResponse.setSignalingUrl(doctorMeetingInfo.getSignalingUrl());
-        joinMeetingResponse.setTurnControlUrl(doctorMeetingInfo.getTurnControlUrl());
+        joinMeetingResponse.setMediaRegion(meetingInfoDto.getMediaRegion());
+        joinMeetingResponse.setAudioHostUrl(meetingInfoDto.getAudioHostUrl());
+        joinMeetingResponse.setSignalingUrl(meetingInfoDto.getSignalingUrl());
+        joinMeetingResponse.setTurnControlUrl(meetingInfoDto.getTurnControlUrl());
         return joinMeetingResponse;
     }
 }

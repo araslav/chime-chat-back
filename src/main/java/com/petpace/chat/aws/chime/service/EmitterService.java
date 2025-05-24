@@ -1,6 +1,7 @@
 package com.petpace.chat.aws.chime.service;
 
-import com.petpace.chat.aws.chime.dto.DoctorMeetingInfo;
+import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
+import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -22,7 +23,7 @@ public class EmitterService {
         return emitter;
     }
 
-    public void notifyClient(DoctorMeetingInfo doctorMeetingInfo) {
+    public void notifyClient(JoinMeetingResponse doctorMeetingInfo) {
         SseEmitter emitter = emitterPoolService.getEmitter(doctorMeetingInfo.getMeetingId());
         if (emitter != null) {
             try {
