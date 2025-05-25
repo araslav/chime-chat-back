@@ -11,14 +11,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MeetingPoolService {
     private final Map<Long, MeetingInfoDto> meetingMap = new ConcurrentHashMap<>();
 
-    public void addMeeting(Long doctorId, MeetingInfoDto info) {
-        meetingMap.put(doctorId, info);
+    public void addMeeting(Long userId, MeetingInfoDto info) {
+        meetingMap.put(userId, info);
     }
 
     public Optional<MeetingInfoDto> findFreeMeeting() {
         return meetingMap.values().stream()
                 .filter(info -> !info.isBusy())
                 .findFirst();
+    }
+
+    public MeetingInfoDto getByUserId(Long userId) {
+        return meetingMap.get(userId);
     }
 
     public void markDoctorBusy(Long doctorId) {

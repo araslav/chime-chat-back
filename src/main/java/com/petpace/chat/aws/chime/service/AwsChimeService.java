@@ -19,30 +19,17 @@ public class AwsChimeService {
     public MeetingInfoDto createMeeting(UserRequestDto doctorRequestDto) {
         String joinToken = String.valueOf(doctorRequestDto.hashCode());
 
-        // TODO create bean
-        CreateMeetingRequest meetingRequest = CreateMeetingRequest.builder()
-                .clientRequestToken(joinToken)
-                .externalMeetingId("meeting-" + doctorRequestDto.id())
-                .mediaRegion("us-east-1")
-                .build();
+        CreateMeetingResponse meetingResponse = chimeClient.createMeeting(createMeetingRequest(
+                joinToken, doctorRequestDto.id()));
 
-        CreateMeetingResponse meetingResponse = chimeClient.createMeeting(meetingRequest);
+        MeetingInfoDto meetingInfo = mapToMeetingInfo(doctorRequestDto, meetingResponse.meeting());
+        meetingInfo.setJoinToken(joinToken);
 
-        MeetingInfoDto doctorMeetingInfo = mapToMeetingInfo(doctorRequestDto, meetingResponse.meeting());
-        doctorMeetingInfo.setJoinToken(joinToken);
-
-        meetingPoolService.addMeeting(doctorRequestDto.id(), doctorMeetingInfo);
-        return doctorMeetingInfo;
+        meetingPoolService.addMeeting(doctorRequestDto.id(), meetingInfo);
+        return meetingInfo;
     }
 
     public JoinMeetingResponse joinMeeting(UserRequestDto userRequestDto) {
-
-        // create patient JoinMeetingResponse
-        // create doctor  JoinMeetingResponse
-
-
-        // End
-
         MeetingInfoDto meetingInfo = meetingPoolService.findFreeMeeting().get();
 
         User patient = new User(userRequestDto.id(), userRequestDto.name(),
@@ -74,8 +61,6 @@ public class AwsChimeService {
     private MeetingInfoDto mapToMeetingInfo(UserRequestDto userRequestDto, Meeting meeting) {
         MeetingInfoDto meetingInfo = new MeetingInfoDto();
         meetingInfo.setMeetingId(meeting.meetingId());
-//        meetingInfo.setDoctorId(userRequestDto.id());
-//        meetingInfo.setExternalUserId(String.valueOf(userRequestDto.id())); // User Id (doctor ID)
         meetingInfo.setAudioHostUrl(meeting.mediaPlacement().audioHostUrl());
         meetingInfo.setMediaRegion(meeting.mediaRegion());
         meetingInfo.setSignalingUrl(meeting.mediaPlacement().signalingUrl());
@@ -96,5 +81,13 @@ public class AwsChimeService {
         joinMeetingResponse.setSignalingUrl(meetingInfoDto.getSignalingUrl());
         joinMeetingResponse.setTurnControlUrl(meetingInfoDto.getTurnControlUrl());
         return joinMeetingResponse;
+    }
+
+    private CreateMeetingRequest createMeetingRequest (String joinToken, long id) {
+         return CreateMeetingRequest.builder()
+                .clientRequestToken(joinToken)
+                .externalMeetingId("meeting-" + id)
+                .mediaRegion("us-east-1")
+                .build();
     }
 }
