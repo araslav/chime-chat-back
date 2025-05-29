@@ -61,7 +61,7 @@ public class AwsChimeService {
         JoinMeetingResponse patientMeetingResponse = getMeetingResponse(meetingInfo, patient);
 
         emitterService.notifyClient(doctorMeetingResponse);
-        awsRecordingService.startRecording(meetingInfo.getMeetingId());
+//        awsRecordingService.startRecording(meetingInfo.getMeetingId());
 
         return patientMeetingResponse;
     }
