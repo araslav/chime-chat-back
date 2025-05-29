@@ -21,16 +21,7 @@ public class EmitterService {
         emitter.onCompletion(() -> emitterPoolService.remove(meetingId));
         emitter.onTimeout(() -> emitterPoolService.remove(meetingId));
         log.info("-----add Emitter = {}", emitter.toString());
-
-        try {
-            emitter.send(SseEmitter.event()
-                    .name("INIT")
-                    .data("connected")); // или просто .data("ping") — неважно, главное что-то отправить
-        } catch (IOException e) {
-            log.error("Ошибка при отправке INIT события", e);
-            emitter.completeWithError(e);
-        }
-
+        
         return emitter;
     }
 
