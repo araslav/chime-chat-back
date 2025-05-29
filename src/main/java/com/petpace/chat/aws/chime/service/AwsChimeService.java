@@ -66,7 +66,7 @@ public class AwsChimeService {
 
         log.info("notify Client before = {}", doctorMeetingResponse);
         emitterService.notifyClient(doctorMeetingResponse);
-//        awsRecordingService.startRecording(meetingInfo.getMeetingId());
+        awsRecordingService.startRecording(meetingInfo.getMeetingId());
 
         return patientMeetingResponse;
     }

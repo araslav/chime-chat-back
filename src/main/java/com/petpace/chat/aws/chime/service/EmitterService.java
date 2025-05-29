@@ -21,7 +21,7 @@ public class EmitterService {
         emitter.onCompletion(() -> emitterPoolService.remove(meetingId));
         emitter.onTimeout(() -> emitterPoolService.remove(meetingId));
         log.info("-----add Emitter = {}", emitter.toString());
-        
+
         return emitter;
     }
 
