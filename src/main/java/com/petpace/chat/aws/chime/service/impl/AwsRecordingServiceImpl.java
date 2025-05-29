@@ -43,17 +43,5 @@ public class AwsRecordingServiceImpl implements RecordingService {
                 .build();
 
         CreateMediaCapturePipelineResponse response = chimeSdkMediaPipelinesClient.createMediaCapturePipeline(request);
-        System.out.println("Pipeline ID: " + response.mediaCapturePipeline().mediaPipelineId());
-        System.out.println("Status: " + response.mediaCapturePipeline().statusAsString());
-        System.out.println("Source Type: " + response.mediaCapturePipeline().sourceTypeAsString());
-        System.out.println("Sink Type: " + response.mediaCapturePipeline().sinkTypeAsString());
-    }
-
-    public void printCredentials() {
-        AwsCredentialsProvider provider = DefaultCredentialsProvider.create();
-        AwsCredentials credentials = provider.resolveCredentials();
-
-        System.out.println("Access Key ID: " + credentials.accessKeyId());
-        System.out.println("Secret Access Key: " + credentials.secretAccessKey());
     }
 }

@@ -66,7 +66,7 @@ public class AwsChimeService {
 
         log.info("notify Client before = {}", doctorMeetingResponse);
         emitterService.notifyClient(doctorMeetingResponse);
-        awsRecordingService.startRecording(meetingInfo.getMeetingId());
+//        awsRecordingService.startRecording(meetingInfo.getMeetingId());
 
         return patientMeetingResponse;
     }
@@ -100,11 +100,9 @@ public class AwsChimeService {
                 .orElseThrow(
                         () -> new RuntimeException("Meeting with id " + meetingId + " not found"));
         meetingInfoDto.setBusy(meetingInfoRequestDto.isBusy());
-        System.out.println(meetingPoolService.getAllMeetings().toString());
     }
 
     public void deleteMeeting(String id) {
         meetingPoolService.removeMeeting(id);
-        System.out.println(meetingPoolService.getAllMeetings().toString());
     }
 }
