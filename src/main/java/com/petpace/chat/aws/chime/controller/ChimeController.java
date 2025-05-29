@@ -6,8 +6,10 @@ import com.petpace.chat.aws.chime.dto.MeetingInfoRequestDto;
 import com.petpace.chat.aws.chime.dto.UserRequestDto;
 import com.petpace.chat.aws.chime.service.AwsChimeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/chime/meeting")
@@ -31,6 +33,8 @@ public class ChimeController {
 
     @PatchMapping("/{id}")
     public void updateMeeting(@RequestBody MeetingInfoRequestDto meetingInfoRequestDto, @PathVariable String id) {
+        log.info("updateMeetingStatus called with meetingInfoRequestDto = {}", meetingInfoRequestDto);
+        log.info("updateMeetingStatus called with meetingId = {}", id);
         awsChimeService.updateMeetingStatus(meetingInfoRequestDto, id);
     }
 

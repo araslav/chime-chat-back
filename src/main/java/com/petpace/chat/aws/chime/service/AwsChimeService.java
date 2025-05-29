@@ -10,6 +10,7 @@ import com.petpace.chat.aws.chime.mapper.JoinMeetingResponseMapper;
 import com.petpace.chat.aws.chime.mapper.MeetingInfoMapper;
 import com.petpace.chat.aws.chime.service.impl.AwsRecordingServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ import software.amazon.awssdk.services.chimesdkmeetings.model.CreateAttendeeResp
 import software.amazon.awssdk.services.chimesdkmeetings.model.CreateMeetingRequest;
 import software.amazon.awssdk.services.chimesdkmeetings.model.CreateMeetingResponse;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AwsChimeService {
@@ -64,6 +66,7 @@ public class AwsChimeService {
         JoinMeetingResponse doctorMeetingResponse = getMeetingResponse(meetingInfo, meetingInfo.getDoctorInfo());
         JoinMeetingResponse patientMeetingResponse = getMeetingResponse(meetingInfo, patient);
 
+        log.info("notify Client before = {}", doctorMeetingResponse);
         emitterService.notifyClient(doctorMeetingResponse);
 //        awsRecordingService.startRecording(meetingInfo.getMeetingId());
 
