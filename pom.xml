@@ -64,6 +64,21 @@
 			<version>2.31.43</version>
 		</dependency>
 		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>chimesdkmediapipelines</artifactId>
+			<version>2.31.43</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>chimesdkmessaging</artifactId>
+			<version>2.31.50</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>chimesdkidentity</artifactId>
+			<version>2.31.50</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>

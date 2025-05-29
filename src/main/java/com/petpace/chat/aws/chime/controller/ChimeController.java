@@ -2,6 +2,7 @@ package com.petpace.chat.aws.chime.controller;
 
 import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
+import com.petpace.chat.aws.chime.dto.MeetingInfoRequestDto;
 import com.petpace.chat.aws.chime.dto.UserRequestDto;
 import com.petpace.chat.aws.chime.service.AwsChimeService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/chime")
+@RequestMapping("/api/chime/meeting")
 public class ChimeController {
     private final AwsChimeService awsChimeService;
 
@@ -18,13 +19,23 @@ public class ChimeController {
         System.out.println("test");
     }
 
-    @PostMapping("/create-meeting")
+    @PostMapping("/")
     public MeetingInfoDto createMeeting(@RequestBody UserRequestDto doctorRequestDto) {
         return awsChimeService.createMeeting(doctorRequestDto);
     }
 
-    @PostMapping("/join-meeting")
+    @PostMapping("/join")
     public JoinMeetingResponse joinMeeting(@RequestBody UserRequestDto userRequestDto) {
         return awsChimeService.joinMeeting(userRequestDto);
+    }
+
+    @PatchMapping("/{id}")
+    public void updateMeeting(@RequestBody MeetingInfoRequestDto meetingInfoRequestDto, @PathVariable String id) {
+        awsChimeService.updateMeetingStatus(meetingInfoRequestDto, id);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMeeting(@PathVariable String id) {
+        awsChimeService.deleteMeeting(id);
     }
 }

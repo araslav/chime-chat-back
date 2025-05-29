@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 public class MeetingInfoDto {
     private String meetingId;
-//    private Long doctorId;
     private boolean isBusy = false;
     private String mediaRegion;
     private String externalUserId;

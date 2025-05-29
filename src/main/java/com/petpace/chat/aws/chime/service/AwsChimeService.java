@@ -1,20 +1,35 @@
 package com.petpace.chat.aws.chime.service;
 
+import com.petpace.chat.aws.chime.component.MeetingPoolComponent;
 import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
+import com.petpace.chat.aws.chime.dto.MeetingInfoRequestDto;
 import com.petpace.chat.aws.chime.dto.UserRequestDto;
 import com.petpace.chat.aws.chime.entity.User;
+import com.petpace.chat.aws.chime.mapper.JoinMeetingResponseMapper;
+import com.petpace.chat.aws.chime.mapper.MeetingInfoMapper;
+import com.petpace.chat.aws.chime.service.impl.AwsRecordingServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.chimesdkmeetings.ChimeSdkMeetingsClient;
-import software.amazon.awssdk.services.chimesdkmeetings.model.*;
+import software.amazon.awssdk.services.chimesdkmeetings.model.Attendee;
+import software.amazon.awssdk.services.chimesdkmeetings.model.CreateAttendeeRequest;
+import software.amazon.awssdk.services.chimesdkmeetings.model.CreateAttendeeResponse;
+import software.amazon.awssdk.services.chimesdkmeetings.model.CreateMeetingRequest;
+import software.amazon.awssdk.services.chimesdkmeetings.model.CreateMeetingResponse;
 
 @RequiredArgsConstructor
 @Service
 public class AwsChimeService {
     private final ChimeSdkMeetingsClient chimeClient;
-    private final MeetingPoolService meetingPoolService;
+    private final MeetingPoolComponent meetingPoolService;
     private final EmitterService emitterService;
+    private final MeetingInfoMapper meetingInfoMapper;
+    private final JoinMeetingResponseMapper joinMeetingResponseMapper;
+    private final AwsRecordingServiceImpl awsRecordingService;
 
     public MeetingInfoDto createMeeting(UserRequestDto doctorRequestDto) {
         String joinToken = String.valueOf(doctorRequestDto.hashCode());
@@ -22,15 +37,21 @@ public class AwsChimeService {
         CreateMeetingResponse meetingResponse = chimeClient.createMeeting(createMeetingRequest(
                 joinToken, doctorRequestDto.id()));
 
-        MeetingInfoDto meetingInfo = mapToMeetingInfo(doctorRequestDto, meetingResponse.meeting());
+        MeetingInfoDto meetingInfo = meetingInfoMapper.mapToMeetingInfoDto(doctorRequestDto, meetingResponse.meeting());
         meetingInfo.setJoinToken(joinToken);
 
-        meetingPoolService.addMeeting(doctorRequestDto.id(), meetingInfo);
+        meetingPoolService.addMeeting(meetingInfo.getMeetingId(), meetingInfo);
         return meetingInfo;
     }
 
     public JoinMeetingResponse joinMeeting(UserRequestDto userRequestDto) {
-        MeetingInfoDto meetingInfo = meetingPoolService.findFreeMeeting().get();
+        MeetingInfoDto meetingInfo = meetingPoolService.findFreeMeeting().orElseThrow(
+                () -> new ResponseStatusException(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        "Didn't find free doctor. Try later!")
+        );
+
+        meetingInfo.setBusy(true);
 
         User patient = new User(userRequestDto.id(), userRequestDto.name(),
                 userRequestDto.name(), userRequestDto.role());
@@ -39,12 +60,14 @@ public class AwsChimeService {
         JoinMeetingResponse patientMeetingResponse = getMeetingResponse(meetingInfo, patient);
 
         emitterService.notifyClient(doctorMeetingResponse);
+        awsRecordingService.startRecording(meetingInfo.getMeetingId());
+
         return patientMeetingResponse;
     }
 
     private JoinMeetingResponse getMeetingResponse(MeetingInfoDto meetingInfoDto, User user) {
         Attendee attendee = createAttendee(meetingInfoDto.getMeetingId(), user);
-        return mapToJoinMeetingResponse(meetingInfoDto, attendee);
+        return  joinMeetingResponseMapper.mapToJoinMeetingResponse(meetingInfoDto, attendee);
     }
 
 
@@ -58,36 +81,24 @@ public class AwsChimeService {
         return attendeeResponse.attendee();
     }
 
-    private MeetingInfoDto mapToMeetingInfo(UserRequestDto userRequestDto, Meeting meeting) {
-        MeetingInfoDto meetingInfo = new MeetingInfoDto();
-        meetingInfo.setMeetingId(meeting.meetingId());
-        meetingInfo.setAudioHostUrl(meeting.mediaPlacement().audioHostUrl());
-        meetingInfo.setMediaRegion(meeting.mediaRegion());
-        meetingInfo.setSignalingUrl(meeting.mediaPlacement().signalingUrl());
-        meetingInfo.setTurnControlUrl(meeting.mediaPlacement().turnControlUrl());
-        meetingInfo.setDoctorInfo(new User(userRequestDto.id(), userRequestDto.name(),
-                userRequestDto.name(), userRequestDto.role()));
-        return meetingInfo;
-    }
-
-    private JoinMeetingResponse mapToJoinMeetingResponse(MeetingInfoDto meetingInfoDto,Attendee attendee) {
-        JoinMeetingResponse joinMeetingResponse = new JoinMeetingResponse();
-        joinMeetingResponse.setMeetingId(meetingInfoDto.getMeetingId());
-        joinMeetingResponse.setExternalUserId(attendee.externalUserId());
-        joinMeetingResponse.setJoinToken(attendee.joinToken());
-        joinMeetingResponse.setAttendeeId(attendee.attendeeId());
-        joinMeetingResponse.setMediaRegion(meetingInfoDto.getMediaRegion());
-        joinMeetingResponse.setAudioHostUrl(meetingInfoDto.getAudioHostUrl());
-        joinMeetingResponse.setSignalingUrl(meetingInfoDto.getSignalingUrl());
-        joinMeetingResponse.setTurnControlUrl(meetingInfoDto.getTurnControlUrl());
-        return joinMeetingResponse;
-    }
-
     private CreateMeetingRequest createMeetingRequest (String joinToken, long id) {
          return CreateMeetingRequest.builder()
                 .clientRequestToken(joinToken)
                 .externalMeetingId("meeting-" + id)
-                .mediaRegion("us-east-1")
+                .mediaRegion(Region.US_EAST_1.toString())
                 .build();
+    }
+
+    public void updateMeetingStatus(MeetingInfoRequestDto meetingInfoRequestDto, String meetingId) {
+        MeetingInfoDto meetingInfoDto = meetingPoolService.getMeetingInfoByMeetingId(meetingId)
+                .orElseThrow(
+                        () -> new RuntimeException("Meeting with id " + meetingId + " not found"));
+        meetingInfoDto.setBusy(meetingInfoRequestDto.isBusy());
+        System.out.println(meetingPoolService.getAllMeetings().toString());
+    }
+
+    public void deleteMeeting(String id) {
+        meetingPoolService.removeMeeting(id);
+        System.out.println(meetingPoolService.getAllMeetings().toString());
     }
 }

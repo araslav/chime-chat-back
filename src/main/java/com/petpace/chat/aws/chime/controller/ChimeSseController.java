@@ -7,7 +7,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/chime")
+@RequestMapping("/api/chime/meeting")
 public class ChimeSseController {
 
     private final EmitterService emitterService;
@@ -16,19 +16,4 @@ public class ChimeSseController {
     public SseEmitter subscribe(@RequestParam String meetingId) {
         return emitterService.subscribe(meetingId);
     }
-
-//    @PostMapping("/notify-patient-joined")
-//    public ResponseEntity<Void> notifyPatientJoined(@RequestParam String meetingId, @RequestParam String patientName) {
-//        SseEmitter emitter = doctorEmitters.get(meetingId);
-//        if (emitter != null) {
-//            try {
-//                emitter.send(SseEmitter.event()
-//                    .name("patient-joined")
-//                    .data(patientName));
-//            } catch (IOException e) {
-//                doctorEmitters.remove(meetingId);
-//            }
-//        }
-//        return ResponseEntity.ok().build();
-//    }
 }

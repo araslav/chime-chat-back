@@ -1,17 +1,16 @@
 package com.petpace.chat.aws.chime.service;
 
+import com.petpace.chat.aws.chime.component.EmitterPoolComponent;
 import com.petpace.chat.aws.chime.dto.JoinMeetingResponse;
-import com.petpace.chat.aws.chime.dto.MeetingInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
 import java.io.IOException;
 
 @RequiredArgsConstructor
 @Service
 public class EmitterService {
-    private final EmitterPoolService emitterPoolService;
+    private final EmitterPoolComponent emitterPoolService;
 
     public SseEmitter subscribe(String meetingId) {
         SseEmitter emitter = new SseEmitter(0L); // never timeout
@@ -29,11 +28,9 @@ public class EmitterService {
             try {
                 emitter.send(SseEmitter.event()
                         .name("patient-joined")
-//                        .data("Пациент присоединился к митингу")
                         .data(doctorMeetingInfo)
                 );
             } catch (IOException e) {
-//                doctorEmitters.remove(doctorMeetingInfo.getDoctorId());
                 throw new RuntimeException("Something gone wrong!", e);
             }
         }
