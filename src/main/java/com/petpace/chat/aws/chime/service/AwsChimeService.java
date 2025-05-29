@@ -45,9 +45,7 @@ public class AwsChimeService {
 
         meetingPoolService.addMeeting(meetingInfo.getMeetingId(), meetingInfo);
 
-        System.out.println(meetingInfo.getMeetingId());
-        System.out.println(meetingInfo);
-        System.out.println("-----meetingInfo-------");
+        log.info("------Meeting Info = {}", meetingInfo);
         return meetingInfo;
     }
 
