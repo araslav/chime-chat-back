@@ -21,7 +21,7 @@ public class ChimeMessagingService {
     private final ChimeSdkIdentityClient identityClient;
     private final ChimeSdkMessagingClient messagingClient;
 
-    @Value("${chime.messaging.app-instance-arn}")
+    @Value("${spring.chime.messaging.app-instance-arn}")
     private String appInstanceArn;
 
     public String createUser(String userId, String name) {

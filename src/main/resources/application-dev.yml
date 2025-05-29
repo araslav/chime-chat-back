@@ -11,4 +11,9 @@ spring:
     hibernate:
       ddl-auto: none
     database-platform: org.hibernate.dialect.H2Dialect
+
   crossOriginUrl: http://localhost:4200
+
+  chime:
+    messaging:
+      app-instance-arn: arn:aws:chime:us-east-1:127214159583:app-instance/4d97c44f-c3d7-4087-a152-da8e67b72606

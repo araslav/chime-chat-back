@@ -30,6 +30,7 @@ public class AwsChimeService {
     private final MeetingInfoMapper meetingInfoMapper;
     private final JoinMeetingResponseMapper joinMeetingResponseMapper;
     private final AwsRecordingServiceImpl awsRecordingService;
+    private final ChimeMessagingService chimeMessagingService;
 
     public MeetingInfoDto createMeeting(UserRequestDto doctorRequestDto) {
         String joinToken = String.valueOf(doctorRequestDto.hashCode());
